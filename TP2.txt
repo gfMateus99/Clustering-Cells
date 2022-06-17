@@ -1,0 +1,174 @@
+Atenção:
+- Não edite este ficheiro em programas como Word e afins. Use exclusivamente um editor de texto simples. Em caso de dúvida, use o editor do Spyder.
+- Não altere a estrutura deste ficheiro. Preencha as respostas apenas nos espaços respectivos (a seguir à tag R#:)
+- Pode adicionar linhas no espaço para as respostas mas as respostas devem ser sucintas e directas.
+- Pode incluir referências a imagens ou a ficheiros html como os relatórios gerados com os clusters. Para isso basta incluir este documento na pasta com os reports ou imagens e referí-los no texto pelo nome do ficheiro numa linha isolada. Por exemplo, a linha
+
+teste.png
+
+refere um ficheiro de imagem teste.png na mesma pasta deste documento.
+
+QUESTÔES:
+
+Q1: Explique como seleccionou os melhores atributos para a fase de clustering. Em particular, os métodos de visualização usados para explorar os 18 atributos extraídos e quaisquer testes estatísticos usados.
+R1:
+O processo de extração de features iniciou-se treinando os diferentes métodos (Principal Component Analysis (PCA), t-Distributed Stochastic Neighbor Embedding (t-SNE) e Isometric mapping with Isomap) e extraindo 6 features de cada um deles resultando num total de 18 features.
+Depois de termos as 18 features selecionadas, analisámos a correlação entre estas 18 features. Para isso construímos uma matriz de correlação, que apresenta a correlação entre todos os pares de combinações das 18 features. (Usou-se o coeficiente de Pearson nesta matriz). Pares de features que estejam altamente correlacionados, significa que o seu contributo para o modelo final é semelhante, bastando ter no modelo final, apenas uma feature dos pares altamente correlacionados (Para melhor visualização de quais os pares de features fortemente correlacionados fizemos o plot de um heatmap recorrendo à biblioteca seaborn.
+
+Heatmap.png
+
+Selecionámos os pares de features com uma correlação superior a 0.5 e com este processo obtivémos os pares [0, 12], [1, 13], [2, 13], [2, 14], [3, 15], [4, 16]. Para decidir qual a feature de cada par que devia ser apagada, fizemos uma análise de variância ((ANOVA) F-test) com as 18 features, para perceber de entre as features que se encontram nos pares obtidos, quais aquelas que têm uma correlação maior com a sua label. Por exemplo, a feature 0 tem uma correlação com a sua label de aproximadamente 8 e a feature 12 tem uma correlação com a sua label de aproximadamente 22. Assim entre a feature 0 e 12 iríamos excluir a feature 12. Com este processo reduzimos as 18 features para 13. 
+Em seguida, aproveitamos o facto de termos alguns dados labelados e utilizámos apenas esses (ignorando os dados não labelados de forma a não influenciarem neste teste) para fazer uma nova análise de variância ((ANOVA) F-test) para perceber, de entre as 13 features selecionadas, quais as features que estão fortemente correlacionadas com a sua label. Após corrermos o programa algumas vezes, concluímos que as features 0, 1, 10 das 13 extraídas anteriormente, eram as que se mantinham sempre com uma correlação grande em relação à classe.
+
+Feature_importance_Ftest.png 
+
+A feature 0 e 1 resultam da extração através da Principal Component Analysis (PCA) e a feature 13 resulta da extração através da Isometric mapping with Isomap.
+
+Q2: Depois de seleccionar os atributos, standardizou ou normalizou os valores? Justifique a sua decisão.
+R2:
+Depois de selecionar os atributos standardizamos os valores das features para que as distâncias dos pontos em diferentes features estejam na mesma escala, pois 100 de distância numa feature poderia ser uma distância pouco significativa (numa escala de 1 milhão por exemplo) enquanto que numa escala de 150, seria uma diferença bastante significativa.
+Necessitamos de fazer isto pois utilizamos as distâncias euclidianas nos métodos de clustering que utilizamos.
+
+Q3: Explique como encontrou o valor do raio da vizinhança (epsilon) para o algoritmo de DBSCAN pelo procedimento descrito no artigo "A density-based algorithm for discovering clusters in large spatial databases with noise".
+R3:
+Para encontrar o valor do raio da vizinhança para o algoritmo DBSCAN começamos por fazer um gráfico com o indíce dos pontos no eixo dos X e o valor do raio da vizinhança(Eps) no eixo dos Y. Tentamos escolher um valor para o raio da vizinhança (Eps) num ponto limite isto é, num valor máximo do raio da vizinhança do agrupamento mais fino. Para tal, escolhemos para valor do raio da vizinhança(Eps), um ponto do gráfico onde se forma um "cotovelo" de modo a distinguir os pontos considerados "noise", dos pontos que devem ser considerados e inseridos em clusters como é sugerido no artigo "A density-based algorithm for discovering clusters in large spatial databases with noise".
+
+Q4: Examinando os clusters gerados pelo algoritmo DBSCAN com o valor otimizado pelo método descrito no artigo, parece-lhe que o resultado é adequado para aglomerar estas imagens? Justifique a sua resposta.
+R4:
+Depois de se encontrar o valor otimizado pelo método descrito no artigo, chegámos à conclusão que o resultado não é adequado para aglomerar estas imagens pois são gerados apenas 2 clusters, um deles contem apenas 5 exemplos (Cluster 1) e o outro contém quase todos os outros exemplos (Cluster 0). São ainda classificados 25 pontos como noise (Cluster -1). 
+A conclusão que se tira, ao visualizar os clusters gerados, é que estes clusters não refletem as diferentes fases de vida das células. É possível reparar que no cluster 0 gerado, encontram-se quase todos os exemplos dados.
+Observando o resultado, conseguímos concluir que este não é adequado para aglomerar estas imagens, pois não nos dá nenhuma informação sobre as células em si, mas sim sobre as suas densidades e desta forma os aglomerados não nos dão qualquer informação sobre as diferentes fases de vida das células.
+
+Q5: Descreva a sua análise dos parâmetros k (para K-Means) e epsilon (para DBSCAN) usando os indicadores internos e externos indicados no enunciado. Inclua os dois gráficos com os valores dos indicadores (indicando o nome da imagem de cada plot numa linha da resposta) em função dos parâmetros k e epsilon e descreva a escolha dos intervalos nos quais examinou estes parâmetros. Indique, justificando, que conclusões pode tirar desta análise.
+R5:
+Para análise do parâmetro k (para K-Means), variámos o seu valor entre 2 e 21.
+Analisando o indicador externo ("Silhouette score"), observámos que para os vários valores de k testados, o seu valor varia muito pouco, encontrando-se sempre perto de 0,3. Isto revela que, neste caso, o silhouette score não contribui muito para a decisão de escolher o melhor k porque não apresenta uma variação significativa nos seus valores (variação da "Cohesion" e da "Separation").
+
+Ao analisar-mos os indicadores externos, que utilizam as labels introduzidas pelos biólogos verificamos que:
+- o "Rand Index" varia aproximadamente entre 0.65 e 0.75. 
+- a "Precision" varia aproximadamente entre 0.55 e 0.79.
+- o "Recall" varia aproximadamente entre 0.15 e 0.89.
+- o "F1" varia aproximadamente entre 0.25 e 0.74.
+- o "Adjusted Rand Index" varia aproximadamente entre 0.1 e 0.52.
+
+Ao analisar a forma como estes indicadores variam, observamos que o "F1", o "Recall" e o "Ajudsted rand index" variam de forma semelhante, e apesar de terem valores parecidos, os três diminuem com o aumento do valor de k. O indicador "Rand Index" varia muito pouco, encontrando-se sempre perto de 0,7 e por não apresentar uma variação significativa (à semelhança do "Silhouette score"), não ajuda muito na decisão de escolher o melhor k. 
+O indicador "Precision" varia conforme o k, tendo o seu máximo em k=13. Este indicador em média aumenta ligeiramente com o valor de k oscilando entre 0.55 e 0.79.
+Analisando todos os indicadores, concluímos que quer o "F1", o "Recall", o "Ajudsted rand index" e o "Precision" devem ser tidos em conta aquando a tomada de decisão para o melhor valor de k. Tendo estes 4 classificadores em consideração, os melhores valores para k serão o k=2, k=3, K=4 (valores nos quais os indicadores "F1", o "Recall" e o "Ajudsted rand index" são elevados), k=13 (valor que tem a melhor "Precision", apesar de o "F1", o "Recall", o "Ajudsted rand index" não serem muito elevados) e k=8 (valor em que os 4 indicadores escolhidos para tomar a decisão têm um aumento).
+
+Plot do gráfico de K-Means:
+KMEANS_indicators.png
+
+Para analisar o parâmetro epsilon (para o DBSCAN), variámos o seu valor entre 0.25 e 1.2, com uma escala de 0.01.
+Ao analisar-mos o único indicador interno, o silhouette score, verificamos que este varia entre -0.4 e perto de 0.5. 
+Através deste indicador, podemos concluir que para valores de epsilon entre 0.25 e 0.5 a distância média a pontos do cluster mais próximo é menor à distância média dos pontos do próprio cluster, pois o valor do silhouette score quando o epsilon varia entre estes valores é negativo. Quando damos um valor a epsilon de 0.5 a 1.2, o silhouette score varia entre 0 e 0.5, pelo que podemos concluir que neste intervalo a distância média a pontos do cluster mais próximo é maior à distância média dos pontos do próprio cluster.
+Por fim, observando o gráfico da imagem DBSCAN_indicators podemos concluir que à medida que aumentamos o epsilon entre 0.25 e 1.2,  o silhouette score também melhora, estabilizando a partir de valores de epsilon de 1.1, pois vai agrupar todas as imagens no mesmo cluster.
+
+Ao analisar-mos os indicadores externos, que utilizam as labels introduzidas pelos biólogos verificamos que:
+- o "Rand Index" varia aproximadamente entre 0.1 e 0.6. 
+- a "Precision" varia aproximadamente entre valores perto de 0.38 e 1.
+- o "Recall" varia aproximadamente entre 0 e 1.
+- o "F1" varia aproximadamente  entre 0 e 0.6.
+- o "Adjusted Rand Index" varia aproximadamente entre valores perto de -0.1 e valores perto de 0.3.
+
+Ao analisar a forma como estes indicadores variam, observamos que o "Rand Index", o "Ajdusted Rand Index" e o "F1" variam de forma parecida apesar de terem diferentes valores.Estes três indicadores aumentam quando o epsilon aumenta entre valores de 0.25 e perto de 0.5. A partir de valores de epsilon de 0.5 até valores perto de 0.76, á medida que aumentamos o valor do epsilon o valor destes indicadores diminui. A partir de valores à volta de 0.76 para o epsilon, estes indicadores mantêm-se constantes, não alterando o seu valor á medida que o epsilon aumenta.
+Ao analisar a "Precision" e o "Recall", podemos observar que estes indicadores têm comportamentos opostos, à medida que um aumenta, o outro diminui. Para valores de epsilon entre 0.25 e perto de 1.05, os valores do indicador "Precision" diminuiem de 1 até valores perto de 0.38, e pelo contrário, os valores do indicador "Recall" aumentam de 0 até 1. A partir do valor de epsilon 1.05, estes indicadores mantêm-se constantes, devido ao facto do cluster aglomerar todos os exemplos no mesmo grupo. Logo o indicador "Recall" vai-se manter com o valor de 1.0, pois o número de True Positives vai ser o máximo e não existirão false negatives, pois o dbscan não irá classificar nenhum exemplo como negativo. Isto acontece porque todos os exemplos estão no mesmo cluster e dois exemplos que têm a mesma label, encontram-se no mesmo cluster, enquanto que o número de False Negatives vai ser 0, pois como só existe um cluster, dois exemplos nunca vão estar em clusters diferentes. O indicador "Precision" estabiliza com um valor á volta de 0.38.
+Tendo em conta todos estes indicadores e os respetivos gráficos, podemos concluir que os melhores valores para epsilon encontram-se entre 0.4 e 0.6.
+
+Plot do gráfico de DBSCAN:
+DBSCAN_indicators.png
+
+Q6: Seleccione alguns valores dos parâmetros testados na questão cinco e examine os clusters correspondentes com mais atenção, gerando o ficheiro HTML com as imagens. Justifique a escolha destes valores, discuta as diferentes opções e proponha uma recomendação que poderia ajudar a tarefa dos biólogos de classificar as células e rejeitar erros de segmentação.
+R6:
+Análise dos modelos K-means:
+
+Pelas razões apresentadas na questão anterior, foram examinados clusters com parâmetros de k=2, k=3, k=4, k=8 e k=13. Os ficheiro HTML com as imagens correspondentes aos valores dos parâmetros testados são os seguintes:
+
+kmeans_k_2.html
+
+kmeans_k_3.html
+
+kmeans_k_4.html
+
+kmeans_k_8.html
+
+kmeans_k_13.html
+
+Como nos é dito no enunciado, as imagens que nos foram fornecidas são referentes a 3 fases de vida das células e a imagens com erros de segmentação. Assim é observável que o ideal para ajudar na tarefa dos biólogos seriam 4 clusters que conseguissem separar bem as imagens. Logo, para k<4, "a priori" é observável que a classificação não será muito boa.
+Com k=2 observamos que o cluster 0 se encontra com iamgens referentes ás fases mais iniciais de vida das células e o cluster 1 com tudo o resto (imagens com erros de segmentação e fases de vida mais avançada). 
+Com k=3 já conseguimos encontrar as imagens mais bem divididas conforme a sua fase, contudo o cluster que tem as fases de vida mais avançadas das células, contém também os pontos com erro de segmentação.
+Com k=4, como estávamos à espera, já é visível uma melhor organização dos clusters, ainda que no cluster que aparecem a maioria das imagens com erros de segmentação (Cluster 2), apareçam também muitas imagens de células que não têm erros de segmentação.
+Quer com k=8, quer com k=13, as imagens já se encontram bem separados conforme a fase de vida em que se encontram e os erros de segmentação já estão melhores classificados. Contudo no modelo com k=8 clusters ainda existem algumas imagens que apresentam erros de segmentação, e não são classificados como tal. O mesmo já não acontece para o modelo com k=13, no qual todos os clusters gerados apresentam imagens com características muito semelhantes.
+
+Análise dos modelos DBSCAN:
+
+Para os valores do parâmetro epsilon que escolhemos testar foram: 0.4, 0.45, 0.5, 0.55 e 0.6. Escolhemos estes valores pois de acordo com os indicadores estudados na questão cinco, o melhor epsilon encontrava-se dentro deste valores (0.4 e 0.6).
+
+Para o valor de epsilon = 0.4 observamos que o DBSCAN divide os exemplos em 8 clusters. No cluster -1 (noise) encontram-se imagens de celúlas em todas as fases, mas maioritariamente células na fase 3, e ainda alguns erros de segmentação. No Cluster 0 encontram-se também células em todas as fases apesar de neste cluster estarem maioritariamente células na fase 1 e 2, podemos também encontrar alguns erros de segmentação neste cluster. No Cluster 1 encontram-se apenas erros de segmentação. Nos Clusters 2,3,5,6 encontramos apenas células na fase 1. Por fim no Cluster 4 encontramos apenas células na fase 2. 
+Podemos observar estes cluster na seguinte imagem: 
+
+dbscan_eps_0.4.html
+
+Para o valor de epsilon = 0.45 observamos que o DBSCAN também divide os exemplos em 8 clusters. No cluster -1 (noise) encontram-se novamente imagens de células em todas as fases, apesar de serem maioritariamente células na fase 3, e alguns erros de segmentação. No cluster 0 encontramos a maior parte das imagens, aqui encontram-se células em todas as fases, apesar de serem maioritariamente na fase 1 e 2, e ainda alguns erros de segmentação. No cluster 1 encontram-se apenas erros de segmentaçãos. No Cluster 2 encontram-se apenas imagens de células na fase 2. Nos clusters 3,4,5,6 encontram-se apenas células na fase 1.
+Podemos observar estes clusters na seguinte imagem:
+
+dbscan_eps_0.45.html
+
+Para o valor de epsilon = 0.5 observamos que o DBSCAN divide as imagens das células em 6 clusters. No cluster -1 (noise) encontram-se imagens de células em todas as fases, apesar de serem maioritariamente imagens de células na fase 3. No Cluster 0 encontra-se a maior parte das imagens das células, estão aqui agrupadas células em todas as fases, maioritariamente das fases 1 e 2, e ainda alguns erros de segmentação. No Cluster 1 encontramos apenas erros de segmentação. No Cluster 2 encontramos imagens de células na fase 1 e 2. No Cluster 3 encontramos apenas imagens de células na fase 1 e o Cluster 4 contém 3 imagens de células na fase 3 e 2 imagens de células na fase 2.
+Podemos observar estes clusters na seguinte imagem:
+
+dbscan_eps_0.5.html
+
+Para o valor de epsilon = 0.55 observamos que o DBSCAN divide as imagens das células apenas em 3 clusters. O Cluster -1 (noise) contém maioritariamente células na fase 3, mas contém também algumas imagéns de células nas fases 1 e 2. O Cluster 0 contém quase todas as imagens, aqui encontram-se células em todas as fases e todos os erros de segmentação. O Cluster 1 contém apenas imagens de células na fase 2.
+Podemos observar estes clusters na seguinte imagem:
+
+dbscan_eps_0.55.html
+
+Por último para o valor de epsilon = 0.6 observamos que o dbscan divide as imagens das células em 3 clusters. O Cluster -1 (noise) contém maioritariamente imagens de células na fase 3, contendo ainda assim algumas células da fase 1 e 2. No Cluster 0 encontram-se quase todas as imagens, este cluster contém imagens de células em todas as fases e ainda todos os erros de segmentação.  No Cluster 1 encontramos apenas imagens de células na fase 1.
+Podemos observar estes clusters na seguinte imagem:
+
+dbscan_eps_0.6.html
+
+Com esta análise podemos concluir que ao fazer o clustering com o DBSCAN, este vai agrupar a maior parte das imagens das células sempre no Cluster 0 juntamente com alguns erros de segmentação e depois coloca muito poucas imagens noutros clusters, ainda que bem divididos. Concluímos que o modelo DBSCAN não é um bom modelo para ajudar os biólogos na tarefa de classificar as células nem a de rejeitar os segmentation errors.
+No caso do clustering com K-means, usando um modelo com k=13 clusters (melhor modelo encontrado), todos os clusters gerados têm exemplos semelhantes. Assim, recomendaríamos para o objetivo do problema em questão, ser usado um modelo K-means com 13 clusters. Contudo, como este modelo apresenta um número de clusters superior ao pretendido, alguns clusters teriam de ser agrupados pois referem-se à mesma fase de vida das células. Assim, para a fase 1 fariam parte os clusters 1, 2, 3, 5, 8; para a fase 2 fariam parte os clusters 9, 10; para a fase 3 fariam parte os clusters 0, 12; e para os erros de segmentação fariam parte os clusters 4, 6, 7, 11.
+   
+Q7: Discuta vantagens, problemas ou otros aspectos destes dois algoritmos (K-Means e DBSCAN) que considere relevantes para ajudar os biólogos a organizar estas imagens, considerando o seu conhecimento teórico destes algoritmos bem como os resultados que obteve no seu trabalho.
+R7:
+No contexto do problema que os biólogos pretendem resolver ambos os algoritmos poderiam vir a trazer benefícios.
+No caso do algoritmo K-means, e como este é um algoritmo baseado em protótipo, isto leva a que todas as imagens fornecidas tenham de fazer parte de um dos k centroids. Assim, no caso de estudo atual, o algoritmo de K-means irá associar as imagens com erro de segmentação nos dados fornecidos a um cluster ao invés de descartar estes pontos. Isto pode levar a que as imagens com erro de segmentação nem sempre sejam bem classificados, e por vezes façam parte de clusters errados. Contudo, o algoritmo de DBSCAN é um algoritmo que tem a capacidade de considerar pontos como “noise”, ou seja descartar pontos que façam parte de nenhum cluster nem que tenham um número mínimo de pontos na   vizinhança. Assim, podemos concluir que o DBSCAN neste caso é um bom algoritmo para separar os erros de segmentação das restantes imagens, mas não simplificaria muito a tarefa dos biólogos a classificar as células de acordo com as fases de vida, pois estariam muitas células de diferentes fases no mesmo cluster apesar de existirem algumas (poucas) bem divididas noutros clusters.
+Para resolver o problema de classificar as células de acordo com as fases de vida, podemos usar o algoritmo K-means. Este algoritmo, como foi visto na questão anterior, não permite classificar de forma correta as imagens, criando apenas um cluster para cada fase de vida das células e um para os erros de segmentação (4 clusters). Contudo, usando 13 clusters, conseguimos observar que todos os clusters gerados tinham imagens semelhantes. Assim, concluímos que neste caso, o algoritmo K-means não serve para agrupar diretamente todas as imagens fornecidas usando 4 clusters (1 para os erros de segmentação e 3 para as fases de vida das células), mas facilita o processo de classificação das células pois gerando os 13 clusters, é possível associar cada cluster a uma fase de vida especifica ou a erros de segmentação. (Por exemplo, para a fase 1 fariam parte os clusters 1, 2, 3, 5, 8)
+Concluindo, no contexto do problema atual, o algoritmo de DBSCAN seria bom para separar os erros de segmentação das restantes imagens e o algoritmo de K-means para facilitar a classificação das várias imagens.
+
+
+Q8: Considere outros algoritmos de clustering implementados na biblioteca Scikit-Learn. Escolha um e aplique-o a este problema, optimizando os parâmetros que julgar adequado da forma que lhe parecer melhor. Justifique a sua escolha e discuta se esta opção daria resultados mais úteis para os biólogos.
+R8:
+O algoritmo da biblioteca Scikit-Learn que escolhemos foi o GaussianMixture. Como concluímos anteriormente que o melhor algoritmo para resolver o problema em questão era o K-means, escolhemos este algoritmo porque este é um algoritmo que faz o clustering dos dados de uma forma muito semelhante ao algoritmo K-means. Contudo, o algoritmo de GaussianMixture, não assume nenhuma forma geométrica para os clusters que gera, ao invés do algoritmo de K-means que assume uma forma esférica para os clusters. O algoritmo de K-means ao assumir uma forma esférica para os clusters que gera, pode fazer com que os clusters criados sejam tendenciosos, e assim os resultados não sejam muito precisos em dados não distribuídos linearmente.
+Após escolhermos este algoritmo testámos a sua performance variando o valor do parâmetro “n_components” entre 2 e 21  (como este algoritmo é semelhante ao algoritmo de K-means, escolhemos uma variação de valores para o parâmetro “n_components” igual a variação de valores que tínhamos escolhido para o parâmetro k do K-means), produzindo o seguinte gráfico:
+
+GaussianMixture_indicators.png
+
+Através deste gráfico concluímos que os parâmetros variam todos de forma muito semelhante ao gráfico do k-means. Pelas razões apresentadas na questão 5 (aquando a análise do gráfico “KMEANS_indicators.png”), concluímos que os melhores valores para o parâmetro “n_components”  era de 5 e  11. Assim produzimos os seguintes modelos:
+
+GaussianMixture_comp_5.html
+GaussianMixture_comp_11.html
+
+Analisando os resultados destes dois modelos, observámos que no modelo com o parâmetro “n_components”  igual a 5, as imagens estavam bem classificadas e havia um cluster que estava a aglomerar a maioria dos pontos com erros de segmentação. Foi gerado um novo modelo de k-means com k=5 ("kmeans_k_5.html") e pela comparação com o modelo GaussianMixture com “n_components”  igual a 5, observámos que o modelo de GaussianMixture consegue classificar melhor as imagens de acordo com a sua fase de vida e consegue aglomerar mais imagens com erros de segmentação num cluster apenas.
+No caso do modelo com “n_components”  igual a 11, todos os clusters gerados apresentam imagens com grandes semelhanças. Foi gerado um novo modelo de k-means com k=11 ("kmeans_k_11.html") e pela comparação com o modelo GaussianMixture com “n_components”  igual a 11, observámos que ambos têm uma performance muito semelhante.
+Em suma, concluímos que para um número menor de clusters o algoritmo GaussianMixture tem uma performance melhor que o algoritmo k-means. Se aumentarmos o número de clusters, concluímos que ambos os algoritmos têm uma performance idêntica.
+
+Q9: (Opcional) Implemente o algoritmo de clustering hierárquico Bissecting K-Means, conforme descrito na página do enunciado e na Aula 19. Examine e discuta os resultados e sua aplicação ao problema de ajudar os biólogos a selecionar e classificar imagens de células.
+R9:
+Examinámos três modelos de bissecting K-Means com os seguintes números de iteraçãoes: um com três iterações (quatro Clusters), outro com sete iterações (oito Clusters) e um último com 12 iterações (13 Clusters)
+
+O modelo com três iterações (4 clusters) é muito parecido ao modelo k-means normal com 4 clusters. Isto deve-se ao facto de existirem poucas divisões.Neste modelo não conseguimos ver as diferentes fases de vida em diferentes clusters.
+Podemos observar este modelo na seguinte imagem:
+bissecting_kmeans_3.html
+
+O modelo com sete iterações (8 clusters) parece dividir ligeiramente melhor do que o modelo k-means normal com 8 clusters e bastante melhor do que o modelo bissecting K-Means com três iterações. Neste modelo já conseguimos ver um cluster com uma grande parte dos erros de segmentação e alguns clusters com imagens de células mais claras. Reparamos também que neste modelo já conseguimos ver alguma divisão entre clusters e fases de vida de células, ainda que estejam algumas misturadas.
+Podemos observar este modelo na seguinte imagem:
+bissecting_kmeans_7.html
+
+Por fim o modelo com 12 iterações (13 Clusters) parece dividir demasiado os clusters em alguns casos, mas noutros parece melhorar bastante a divisão por fases de vida das células. Por exemplo no modelo com sete iterações temos um cluster com uma grande parte dos erros de segmentação e esse cluster ao fazer 12 iterações foi dividido em dois clusters, o que era desnecessário. Por outro lado reparamos que os clusters já não têm tanta mistura de imagens de células em fases de vida diferente e que todas as células parecidas estão bem agrupadas e juntas, o que facilita muito o trabalho dos biólogos ao analisar e catalogar as imagens das células.
+Podemos observar este modelo na seguinte imagem:
+bissecting_kmeans_12.html
+
+Podemos então concluir que o modelo com 12 iterações (13 Clusters) apesar de dividir os erros de segmentação em mais de 1 cluster é o modelo com melhor compromisso entre demasiados clusters e poucos clusters, pois consegue facilitar o trabalho dos biólogos a catalogar células parecidas e na mesma fase de vida, além de ter os erros de segmentação separados das restantes células, ainda que estes se encontrem em 2 clusters e num deles estejam algumas (poucas) células que não são erros de segmentação.
